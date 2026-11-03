@@ -73,10 +73,11 @@ breaking-check:
 		echo "CONTRACT_VERSION is empty; nothing to compare against"; exit 1; \
 	fi
 	@if ! git rev-parse "v$(CONTRACT_VERSION)" >/dev/null 2>&1; then \
-		echo "no tag v$(CONTRACT_VERSION) to compare against"; exit 0; \
-	fi
+		echo "no tag v$(CONTRACT_VERSION) to compare against; skipping breaking check"; \
+else \
 	oasdiff breaking "v$(CONTRACT_VERSION)" HEAD \
-		--paths "$(BACKEND)" || { echo "BREAKING CHANGE DETECTED"; exit 1; }
+		--paths "$(BACKEND)" || { echo "BREAKING CHANGE DETECTED"; exit 1; }; \
+fi
 
 # --- mock server ------------------------------------------------------------
 mock:
