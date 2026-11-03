@@ -28,7 +28,6 @@ cardtalogue-api-contract/
 ├── Makefile              # lint / bundle / breaking-check / mock / docs / generate
 ├── CONTRACT_VERSION      # pinned version; consumers vendor this tag
 ├── CHANGELOG.md
-└── DISCREPANCIES.md
 ```
 
 ## Definition of done (Phase 2)
