@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Python generator venv (Arch blocks system pip; see `make install-py-gen`)
+.venv-gen/
+
 # Generated code (regenerated with `make generate`)
 gen/go/
 gen/ts/

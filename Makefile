@@ -12,20 +12,30 @@
 #   - oasdiff         (go install github.com/oasdiff/oasdiff/...) -> make breaking-check
 #   - Prism           (npm i -g @stoplight/prism-cli)  -> make mock
 #   - Redocly CLI     (npm i -g @redocly/redocly)      -> make docs
-#   - oapi-codegen    (go install github.com/deepmap/oapi-codegen/...) -> make generate
-#   - openapi-python-client (pip install openapi-python-client) -> make generate
+#   - oapi-codegen v2 (go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest)
+#   - openapi-typescript (npx openapi-typescript)      -> make generate-ts
+#   - openapi-python-client (uv venv, see `make install-py-gen`) -> make generate-py
 #
 # In this sandbox only the npm-based targets (validate, bundle, check-orphan-calls)
 # run; the rest are provided for normal CI/dev environments.
+#
+# NOTE: `go install` and `npx` work here (network is open). Python needs a venv
+# because Arch Linux blocks system pip (PEP 668): `make install-py-gen` creates
+# .venv-gen and installs openapi-python-client into it.
 
 CONTRACT_VERSION := $(shell cat CONTRACT_VERSION 2>/dev/null)
+
+# oapi-codegen lives in GOPATH/bin; put it on PATH so `make generate` works
+# without manual PATH setup.
+export PATH := $(shell go env GOPATH)/bin:$(PATH)
+
 BACKEND := contracts/backend.yaml
 SCANNER := contracts/scanner.yaml
 DIST := dist/openapi.yaml
 REPOS ?= ../cardtalogue-frontend:../cardtalogue-backend
 
 .PHONY: all validate lint bundle breaking-check mock docs generate \
-        generate-go generate-ts generate-py sync-contract verify-contract \
+        generate-go generate-ts generate-py install-py-gen sync-contract verify-contract \
         check-orphan-calls clean help
 
 all: validate lint bundle check-orphan-calls
@@ -39,6 +49,7 @@ help:
 	@echo "  mock                Start a Prism mock server for both contracts"
 	@echo "  docs                Build Redocly docs into dist/docs.html"
 	@echo "  generate            Generate Go/TS/Python code from the contracts"
+	@echo "  install-py-gen      Create .venv-gen and install openapi-python-client"
 	@echo "  sync-contract       Fetch the pinned CONTRACT_VERSION tag into each consumer"
 	@echo "  verify-contract     validate + lint + check-orphan-calls + breaking-check"
 	@echo "  check-orphan-calls  Ensure no orphan frontend/backend->scanner calls"
@@ -81,17 +92,26 @@ docs:
 # --- code generation --------------------------------------------------------
 generate: generate-go generate-ts generate-py
 
+# oapi-codegen v2 generate modes: types,gin,client,nethttp,chi,echo,fiber,iris,lambda,nethttp
+# We emit types + gin handlers (the backend uses Gin). `client`/`nethttp` omitted on purpose.
 generate-go:
-	oapi-codegen -package tcgcontract -o gen/go/backend.gen.go $(BACKEND)
-	oapi-codegen -package tcgcontract -o gen/go/scanner.gen.go $(SCANNER)
+	oapi-codegen -package tcgcontract -generate types,gin -o gen/go/backend.gen.go $(BACKEND)
+	oapi-codegen -package tcgcontract -generate types,gin -o gen/go/scanner.gen.go $(SCANNER)
 
 generate-ts:
-	oapi-codegen -package tcgcontract -o gen/ts/backend.gen.ts $(BACKEND)
-	oapi-codegen -package tcgcontract -o gen/ts/scanner.gen.ts $(SCANNER)
+	npx -y openapi-typescript $(BACKEND) -o gen/ts/backend.ts
+	npx -y openapi-typescript $(SCANNER) -o gen/ts/scanner.ts
 
 generate-py:
-	openapi-python-client generate $(BACKEND) -o gen/py/backend
-	openapi-python-client generate $(SCANNER) -o gen/py/scanner
+	@if [ ! -x .venv-gen/bin/openapi-python-client ]; then \
+		echo "openapi-python-client not installed; run: make install-py-gen"; exit 1; \
+	fi
+	.venv-gen/bin/openapi-python-client generate --path $(SCANNER) --meta uv --output-path gen/py/scanner --overwrite
+
+# Arch Linux blocks `pip install --system` (PEP 668 externally-managed). Use a uv venv.
+install-py-gen:
+	uv venv .venv-gen --python 3.14
+	uv pip install --python .venv-gen/bin/python openapi-python-client
 
 # --- contract distribution --------------------------------------------------
 # Each consumer pins a CONTRACT_VERSION tag. `sync-contract` checks out that tag

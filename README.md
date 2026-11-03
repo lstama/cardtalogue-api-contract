@@ -17,8 +17,8 @@ cardtalogue-api-contract/
 │   ├── backend.yaml      #   52 operations (51 under /api/v1 + /health)
 │   └── scanner.yaml      #   scanner HTTP surface (recognize + health/info/metrics)
 ├── gen/                  # generated code (git-ignored; `make generate`)
-│   ├── go/               #   oapi-codegen: types + Gin handlers + validation
-│   ├── ts/               #   oapi-codegen: TS client types
+│   ├── go/               #   oapi-codegen v2: types + Gin handlers
+│   ├── ts/               #   openapi-typescript: TS client types
 │   └── py/               #   openapi-python-client: scanner client
 ├── scripts/
 │   ├── validate.mjs      # validate both specs (swagger-parser)
@@ -57,7 +57,8 @@ make bundle          # single-file dist/
 make breaking-check  # oasdiff vs last git tag
 make mock            # Prism mock servers (:8080 backend, :5000 scanner)
 make docs            # Redocly docs in dist/
-make generate        # oapi-codegen (Go/TS) + openapi-python-client (py)
+make generate        # Go (oapi-codegen v2) + TS (openapi-typescript) + py
+make install-py-gen  # create .venv-gen and install openapi-python-client (Arch PEP 668)
 make sync-contract   # vendor CONTRACT_VERSION into each consumer repo
 ```
 

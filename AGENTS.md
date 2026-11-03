@@ -59,9 +59,15 @@ make generate
 
 - Only npm-based scripts run in this sandbox: `validate`, `bundle`, `check`.
 - `lint`, `breaking-check`, `mock`, `docs`, `generate`, `sync-contract` require
-  external tools (Spectral, oasdiff, Prism, Redocly, oapi-codegen,
-  openapi-python-client) installed in a normal environment — see the Makefile
-  header.
+  external tools — see the Makefile header.
+- Code generation commands (verified working):
+  - Go:  `oapi-codegen -package tcgcontract -generate types,gin -o gen/go/backend.gen.go contracts/backend.yaml`
+         (v2 module path `github.com/oapi-codegen/oapi-codegen/v2`; install via
+         `go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest`).
+  - TS:  `npx openapi-typescript contracts/backend.yaml -o gen/ts/backend.ts`.
+  - Py:  `make install-py-gen` creates `.venv-gen`; then
+         `.venv-gen/bin/openapi-python-client generate --path contracts/scanner.yaml --meta uv --output-path gen/py/scanner --overwrite`.
+         Arch Linux blocks system pip (PEP 668), so Python gen uses a uv venv.
 - `check-orphan-calls.mjs` resolves backend→scanner URLs by tracing
   `http.NewRequest` vars through the constructor to the config default / `.env`.
   It compares **paths** (identical across environments).
