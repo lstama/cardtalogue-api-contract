@@ -37,6 +37,7 @@ paths:
         - media
       security: []
       summary: Health check
+      description: "Check backend health and readiness."
       operationId: health
       responses:
         '200':
@@ -57,6 +58,7 @@ paths:
         - auth
       security: []
       summary: Log in
+      description: "Authenticate a user with email and password, returning access and refresh tokens."
       operationId: login
       requestBody:
         required: true
@@ -81,6 +83,7 @@ paths:
         - auth
       security: []
       summary: Refresh access token
+      description: "Exchange a valid refresh token for a new access token."
       operationId: refresh
       requestBody:
         required: true
@@ -105,6 +108,7 @@ paths:
         - auth
       security: []
       summary: Invalidate the refresh token (read from X-Refresh-Token header)
+      description: "Invalidate the current refresh token and sign the user out."
       operationId: logout
       responses:
         '200':
@@ -124,6 +128,7 @@ paths:
       tags:
         - cards
       summary: List cards
+      description: "List cards, with optional filtering, pagination, and sorting."
       operationId: getCards
       parameters:
         - $ref: '#/components/parameters/Limit'
@@ -143,6 +148,7 @@ paths:
       tags:
         - cards
       summary: Create a card (owner)
+      description: "Create a new card in a game."
       operationId: createCard
       requestBody:
         required: true
@@ -168,6 +174,7 @@ paths:
       tags:
         - cards
       summary: Search cards
+      description: "Search cards by name or code within a game."
       operationId: searchCards
       parameters:
         - name: game_id
@@ -213,6 +220,7 @@ paths:
       tags:
         - cards
       summary: Get a card by id
+      description: "Retrieve a single card by id."
       operationId: getCardById
       responses:
         '200':
@@ -231,6 +239,7 @@ paths:
       tags:
         - cards
       summary: Update a card (owner)
+      description: "Update a card owned by the authenticated user."
       operationId: updateCard
       requestBody:
         required: true
@@ -258,6 +267,7 @@ paths:
       tags:
         - protected-cards
       summary: List the authenticated user's cards
+      description: "List cards including protected fields for authorized callers."
       operationId: getProtectedCards
       parameters:
         - $ref: '#/components/parameters/Limit'
@@ -282,6 +292,7 @@ paths:
       tags:
         - protected-cards
       summary: Get one of the authenticated user's cards
+      description: "Retrieve a single card including protected fields for authorized callers."
       operationId: getProtectedCardById
       responses:
         '200':
@@ -300,6 +311,7 @@ paths:
       tags:
         - protected-cards
       summary: Update one of the authenticated user's cards
+      description: "Update a protected card owned by the authenticated user."
       operationId: updateProtectedCard
       requestBody:
         required: true
@@ -325,6 +337,7 @@ paths:
       tags:
         - games
       summary: List games
+      description: "List games."
       operationId: getGames
       parameters:
         - $ref: '#/components/parameters/Limit'
@@ -344,6 +357,7 @@ paths:
       tags:
         - games
       summary: Create a game (owner)
+      description: "Create a new game."
       operationId: createGame
       requestBody:
         required: true
@@ -369,6 +383,7 @@ paths:
       tags:
         - games
       summary: Search games
+      description: "Search games by name."
       operationId: searchGames
       parameters:
         - name: query
@@ -396,6 +411,7 @@ paths:
       tags:
         - games
       summary: Get a game by id
+      description: "Retrieve a single game by id."
       operationId: getGameById
       responses:
         '200':
@@ -414,6 +430,7 @@ paths:
       tags:
         - games
       summary: Update a game (owner)
+      description: "Update a game."
       operationId: updateGame
       requestBody:
         required: true
@@ -440,6 +457,7 @@ paths:
       tags:
         - games
       summary: Delete a game (owner)
+      description: "Delete a game and its associated cards."
       operationId: deleteGame
       responses:
         '200':
@@ -463,6 +481,7 @@ paths:
       tags:
         - languages
       summary: List languages
+      description: "List languages."
       operationId: getLanguages
       parameters:
         - $ref: '#/components/parameters/Limit'
@@ -482,6 +501,7 @@ paths:
       tags:
         - languages
       summary: Create a language (owner)
+      description: "Create a new language."
       operationId: createLanguage
       requestBody:
         required: true
@@ -507,6 +527,7 @@ paths:
       tags:
         - languages
       summary: Search languages
+      description: "Search languages by name or code."
       operationId: searchLanguages
       parameters:
         - name: query
@@ -534,6 +555,7 @@ paths:
       tags:
         - languages
       summary: Get a language by id
+      description: "Retrieve a single language by id."
       operationId: getLanguageById
       responses:
         '200':
@@ -552,6 +574,7 @@ paths:
       tags:
         - languages
       summary: Update a language (owner)
+      description: "Update a language."
       operationId: updateLanguage
       requestBody:
         required: true
@@ -578,6 +601,7 @@ paths:
       tags:
         - languages
       summary: Delete a language (owner)
+      description: "Delete a language."
       operationId: deleteLanguage
       responses:
         '200':
@@ -593,6 +617,7 @@ paths:
       tags:
         - packs
       summary: List packs
+      description: "List packs, with optional filtering, pagination, and sorting."
       operationId: getPacks
       parameters:
         - $ref: '#/components/parameters/Limit'
@@ -612,6 +637,7 @@ paths:
       tags:
         - packs
       summary: Create a pack (owner)
+      description: "Create a new pack."
       operationId: createPack
       requestBody:
         required: true
@@ -637,6 +663,7 @@ paths:
       tags:
         - packs
       summary: Search packs
+      description: "Search packs by name."
       operationId: searchPacks
       parameters:
         - name: game_id
@@ -676,6 +703,7 @@ paths:
       tags:
         - packs
       summary: Get a pack by id
+      description: "Retrieve a single pack by id."
       operationId: getPackById
       responses:
         '200':
@@ -694,6 +722,7 @@ paths:
       tags:
         - packs
       summary: Update a pack (owner)
+      description: "Update a pack."
       operationId: updatePack
       requestBody:
         required: true
@@ -720,6 +749,7 @@ paths:
       tags:
         - packs
       summary: Delete a pack (owner)
+      description: "Delete a pack."
       operationId: deletePack
       responses:
         '200':
@@ -735,6 +765,7 @@ paths:
       tags:
         - rarities
       summary: List rarities
+      description: "List rarities, with optional filtering, pagination, and sorting."
       operationId: getRarities
       parameters:
         - $ref: '#/components/parameters/Limit'
@@ -754,6 +785,7 @@ paths:
       tags:
         - rarities
       summary: Create a rarity (owner)
+      description: "Create a new rarity."
       operationId: createRarity
       requestBody:
         required: true
@@ -779,6 +811,7 @@ paths:
       tags:
         - rarities
       summary: Search rarities
+      description: "Search rarities by name."
       operationId: searchRarities
       parameters:
         - name: query
@@ -806,6 +839,7 @@ paths:
       tags:
         - rarities
       summary: Get a rarity by id
+      description: "Retrieve a single rarity by id."
       operationId: getRarityById
       responses:
         '200':
@@ -824,6 +858,7 @@ paths:
       tags:
         - rarities
       summary: Update a rarity (owner)
+      description: "Update a rarity."
       operationId: updateRarity
       requestBody:
         required: true
@@ -850,6 +885,7 @@ paths:
       tags:
         - rarities
       summary: Delete a rarity (owner)
+      description: "Delete a rarity."
       operationId: deleteRarity
       responses:
         '200':
@@ -865,6 +901,7 @@ paths:
       tags:
         - storages
       summary: List the authenticated user's storages
+      description: "List the authenticated user's storages."
       operationId: getStorages
       parameters:
         - $ref: '#/components/parameters/Limit'
@@ -886,6 +923,7 @@ paths:
       tags:
         - storages
       summary: Create a storage (owner)
+      description: "Create a new storage for the authenticated user."
       operationId: createStorage
       requestBody:
         required: true
@@ -911,6 +949,7 @@ paths:
       tags:
         - storages
       summary: Search the authenticated user's storages
+      description: "Search the user's storages by name."
       operationId: searchStorages
       parameters:
         - name: query
@@ -940,6 +979,7 @@ paths:
       tags:
         - storages
       summary: Get one of the authenticated user's storages
+      description: "Retrieve a single storage by id."
       operationId: getStorageById
       responses:
         '200':
@@ -958,6 +998,7 @@ paths:
       tags:
         - storages
       summary: Update one of the authenticated user's storages
+      description: "Update a storage owned by the authenticated user."
       operationId: updateStorage
       requestBody:
         required: true
@@ -984,6 +1025,7 @@ paths:
       tags:
         - storages
       summary: Delete one of the authenticated user's storages
+      description: "Delete a storage owned by the authenticated user."
       operationId: deleteStorage
       responses:
         '200':
@@ -999,6 +1041,7 @@ paths:
       tags:
         - users
       summary: List users
+      description: "List users, with optional filtering, pagination, and sorting."
       operationId: getUsers
       responses:
         '200':
@@ -1017,6 +1060,7 @@ paths:
       tags:
         - users
       summary: Create a user (owner)
+      description: "Create a new user."
       operationId: createUser
       requestBody:
         required: true
@@ -1044,6 +1088,7 @@ paths:
       tags:
         - users
       summary: Get a user by id
+      description: "Retrieve a single user by id."
       operationId: getUserById
       responses:
         '200':
@@ -1062,6 +1107,7 @@ paths:
       tags:
         - users
       summary: Update a user (owner)
+      description: "Update a user."
       operationId: updateUser
       requestBody:
         required: true
@@ -1088,6 +1134,7 @@ paths:
       tags:
         - users
       summary: Delete a user (owner)
+      description: "Operation: deleteUser."
       operationId: deleteUser
       responses:
         '200':
@@ -1106,6 +1153,7 @@ paths:
         - bearerAuth: []
       summary: |
         Recognize a card from an uploaded image. Requires a valid JWT and a CAPTCHA token (X-Cap-Token) when CAPTCHA_MODE=on. Multipart field: file.
+      description: "Upload an image and return card matches with confidence scores."
       operationId: scanMedia
       requestBody:
         required: true
@@ -1146,6 +1194,7 @@ paths:
         - media
       summary: |
         Upload an image. Multipart field: file. Optional query param also_scan=true triggers recognition and returns matches.
+      description: "Upload an image and return its metadata."
       operationId: uploadMedia
       parameters:
         - name: also_scan
@@ -1189,6 +1238,7 @@ paths:
       tags:
         - media
       summary: Get media by id
+      description: "Retrieve a single media file by id."
       operationId: getMediaById
       responses:
         '200':
@@ -1207,6 +1257,7 @@ paths:
       tags:
         - media
       summary: Update media (owner)
+      description: "Update a media file owned by the authenticated user."
       operationId: updateMedia
       requestBody:
         required: true
@@ -1233,6 +1284,7 @@ paths:
       tags:
         - media
       summary: Delete media (owner)
+      description: "Delete a media file owned by the authenticated user."
       operationId: deleteMedia
       responses:
         '200':
