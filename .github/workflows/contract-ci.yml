@@ -1,0 +1,48 @@
+name: contract
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install npm deps
+        run: npm install
+
+      - name: Validate contracts
+        run: npm run validate
+
+      - name: Lint contracts (Spectral)
+        run: |
+          npm i -g @stoplight/spectral-cli@latest
+          make lint
+
+      - name: Bundle contracts
+        run: npm run bundle
+
+      - name: Orphan-call guardrail
+        run: npm run check
+        env:
+          REPOS: ../cardtalogue-frontend:../cardtalogue-backend
+
+      - name: Breaking-change check
+        run: |
+          go install github.com/oasdiff/oasdiff/cmd/oasdiff@latest
+          make breaking-check
+
+      - name: Generate code (Go/TS/Python)
+        run: make generate
+        # Fails CI if generated code produces a diff against committed gen/
+        # (once consumers commit generated code).

@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Generated code (regenerated with `make generate`)
+gen/go/
+gen/ts/
+gen/py/
+
+# Bundled output
+dist/
+
+# Mock server runtime
+mock/
+
+# Editor / OS
+.DS_Store
+*.swp

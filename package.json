@@ -6,12 +6,15 @@
   "type": "module",
   "scripts": {
     "validate": "node scripts/validate.mjs",
-    "gen:ts": "node scripts/gen-ts.mjs",
-    "check": "node scripts/check-orphan-calls.mjs"
+    "bundle": "node scripts/bundle.mjs",
+    "check": "node scripts/check-orphan-calls.mjs",
+    "verify": "npm run validate && npm run check"
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "^13.1.0",
-    "js-yaml": "^5.5.0",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
     "openapi-typescript": "^7.13.0"
   }
 }

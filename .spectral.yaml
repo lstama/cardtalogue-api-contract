@@ -1,0 +1,77 @@
+# Spectral ruleset for the Cardtalogue API contracts.
+# Enforces the Phase 2 spec requirements: every operation has an operationId,
+# summary, and description; every response has an example; schemas are tagged.
+# Run with: spectral lint contracts/backend.yaml contracts/scanner.yaml
+# (install with: npm i -g @stoplight/spectral or `make lint`)
+
+extends:
+  - recommended
+
+rules:
+  operation-operationId:
+    description: Every operation must have a unique operationId.
+    severity: error
+
+  operation-summary:
+    description: Every operation must have a summary.
+    severity: error
+
+  operation-description:
+    description: Every operation must have a description.
+    severity: error
+
+  operation-tagged:
+    description: Every operation must be tagged by domain.
+    severity: error
+
+  operation-parameters:
+    description: Every operation must declare its parameters.
+    severity: error
+
+  no-$ref-no-siblings:
+    description: $ref must not have siblings.
+    severity: error
+
+  # Responses must carry a realistic example so consumers can mock and test.
+  response-examples:
+    description: Every response with content must have an example.
+    severity: error
+    given: '$..responses[*][?(@.content)]'
+    then:
+      field: content
+      function: schema
+      functionOptions:
+        schema:
+          anyOf:
+            - required:
+                - example
+            - required:
+                - examples
+
+  # Shared error schema must be referenced by error responses.
+  error-response-schema:
+    description: Error responses (4xx/5xx) must reference the shared ErrorResponse.
+    severity: warn
+    given: '$..responses[?(@key =~ /^(4|5)\d\d$/)]'
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          properties:
+            content:
+              properties:
+                application/json:
+                  properties:
+                    schema:
+                      anyOf:
+                        - properties:
+                            $ref:
+                              pattern: '.*ErrorResponse.*'
+
+  openapi-tags:
+    description: Top-level tags should have descriptions.
+    severity: warn
+
+  openapi-tags-ordering:
+    description: Tags should be ordered alphabetically.
+    severity: off
