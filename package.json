@@ -1,0 +1,17 @@
+{
+  "name": "cardtalogue-api-contract",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Contract-first API workflow for the Cardtalogue stack",
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "gen:ts": "node scripts/gen-ts.mjs",
+    "check": "node scripts/check-orphan-calls.mjs"
+  },
+  "dependencies": {
+    "@apidevtools/swagger-parser": "^13.1.0",
+    "js-yaml": "^5.5.0",
+    "openapi-typescript": "^7.13.0"
+  }
+}

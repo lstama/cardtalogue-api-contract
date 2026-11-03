@@ -1,0 +1,156 @@
+openapi: 3.1.0
+info:
+  title: Cardtalogue Yu-Gi-Oh Scanner API
+  description: |
+    Contract for the Python/Flask card-recognition scanner. The backend calls only POST /api/recognize (see card_recognition_service.go). The other endpoints (health, info, metrics) are documented here for completeness but are not part of the backend boundary.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Local
+tags:
+  - name: recognize
+    description: Card recognition
+  - name: ops
+    description: Operations / observability
+paths:
+  /api/recognize:
+    post:
+      tags:
+        - recognize
+      summary: Recognize a card from an uploaded image.
+      description: |
+        Multipart field `image`. Returns ranked matches with confidence scores and extracted effect text. This is the only scanner endpoint called by the backend; the frontend reaches the scanner indirectly via POST /api/v1/media/scan.
+      operationId: recognize
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Recognition complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecognizeResponse'
+        '400':
+          description: Bad request (missing image)
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+        '413':
+          description: Image too large
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+                    example: image too large
+  /api/health:
+    get:
+      tags:
+        - ops
+      summary: Health check
+      operationId: scannerHealth
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  database_loaded:
+                    type: boolean
+                  num_cards:
+                    type: integer
+  /api/info:
+    get:
+      tags:
+        - ops
+      summary: System / model info
+      operationId: scannerInfo
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  system:
+                    type: string
+                  model:
+                    type: string
+                  device:
+                    type: string
+  /metrics:
+    get:
+      tags:
+        - ops
+      summary: Prometheus metrics
+      operationId: scannerMetrics
+      responses:
+        '200':
+          description: Prometheus text exposition
+          content:
+            text/plain:
+              schema:
+                type: string
+components:
+  schemas:
+    RecognizeMatch:
+      type: object
+      properties:
+        name:
+          type: string
+        confidence:
+          type: number
+          format: float
+          description: 0..1
+        konami_id:
+          type: string
+        detail:
+          type: object
+          properties:
+            monster_effect:
+              type: string
+            pendulum_effect:
+              type: string
+            effect:
+              type: string
+    RecognizeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecognizeMatch'
+        processing_time:
+          type: number
+          format: float
+          description: seconds
