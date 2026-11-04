@@ -9,6 +9,21 @@ boundaries of the system:
 | Backend API | frontend (React/TS) → backend (Go/Gin) | [`contracts/backend.yaml`](contracts/backend.yaml) |
 | Scanner API | backend (Go/Gin) → scanner (Python/Flask) | [`contracts/scanner.yaml`](contracts/scanner.yaml) |
 
+## How to run
+
+```bash
+npm install
+make mock        # Prism mock servers: backend on :8080, scanner on :5000
+```
+
+Use the mocks to prototype and test consumers before the real services exist.
+
+## How to contribute
+
+Changing the shared contract is a coordinated change — see [CONTRIBUTING.md](CONTRIBUTING.md).
+In short: edit both specs, run `make verify-contract` (validate + lint + orphan-call guardrail +
+breaking-change check), and only merge when `make generate` produces no downstream diff.
+
 ## Layout
 
 ```
