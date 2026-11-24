@@ -21,9 +21,12 @@ jobs:
       # Go toolchain for the generator (oapi-codegen) and for oasdiff.
       # 1.26 matches cardtalogue-backend/go.mod, which is what produced the
       # committed backend generated code.
+      # cache: false — this repo has no go.mod/go.sum (tools are `go install`ed),
+      # so setup-go's module cache would only log "Restore cache failed".
       - uses: actions/setup-go@v5
         with:
           go-version: "1.26"
+          cache: false
 
       # Provides `uv`, used by `make install-py-gen` (PEP 668: no system pip).
       - uses: astral-sh/setup-uv@v5
