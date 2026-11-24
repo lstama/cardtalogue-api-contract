@@ -7,13 +7,14 @@
 #   - interactive docs (Redocly)
 #
 # Tools used by these targets (install in a normal environment):
-#   - Spectral        (npm i -g @stoplight/spectral)   -> make lint
+#   - Spectral        (npm i -g @stoplight/spectral-cli) -> make lint
 #   - @apidevtools/swagger-parser (npm)                -> make bundle
 #   - oasdiff         (go install github.com/oasdiff/oasdiff/...) -> make breaking-check
 #   - Prism           (npm i -g @stoplight/prism-cli)  -> make mock
 #   - Redocly CLI     (npm i -g @redocly/redocly)      -> make docs
-#   - oapi-codegen v2 (go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest)
-#   - openapi-typescript (npx openapi-typescript)      -> make generate-ts
+#   - oapi-codegen v2 (go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.8.2)
+#                                                      -> make generate-go
+#   - openapi-typescript (npx openapi-typescript)      -> make generate-ts (devDependency)
 #   - openapi-python-client (uv venv, see `make install-py-gen`) -> make generate-py
 #
 # In this sandbox only the npm-based targets (validate, bundle, check-orphan-calls)
@@ -51,8 +52,8 @@ help:
 	@echo "  generate            Generate Go/TS/Python code from the contracts"
 	@echo "  install-py-gen      Create .venv-gen and install openapi-python-client"
 	@echo "  sync-contract       Fetch the pinned CONTRACT_VERSION tag into each consumer"
-	@echo "  verify-contract     validate + lint + check-orphan-calls + breaking-check"
-	@echo "  check-orphan-calls  Ensure no orphan frontend/backend->scanner calls"
+	@echo "  verify-contract     validate + lint + breaking-check (no consumer call check)"
+	@echo "  check-orphan-calls  Manual local check for orphan frontend/backend->scanner calls"
 	@echo "  clean               Remove generated artifacts"
 
 # --- validation -------------------------------------------------------------
@@ -131,7 +132,12 @@ sync-contract:
 	done
 
 # --- end-to-end verification ------------------------------------------------
-verify-contract: validate lint check-orphan-calls breaking-check
+# Local pre-PR gate. Deliberately excludes check-orphan-calls: the contract repo
+# cannot see consumer sources, so "no orphan calls" is enforced in each
+# consumer's own CI (cardtalogue-frontend/scripts/check-contract-calls.mjs,
+# cardtalogue-backend/scripts/check-scanner-calls.mjs) against the pinned
+# CONTRACT_VERSION. check-orphan-calls remains available for manual use.
+verify-contract: validate lint breaking-check
 
 check-orphan-calls:
 	REPOS=$(REPOS) node scripts/check-orphan-calls.mjs
