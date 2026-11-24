@@ -7,7 +7,7 @@
 #   - interactive docs (Redocly)
 #
 # Tools used by these targets (install in a normal environment):
-#   - Spectral        (npm i -g @stoplight/spectral)   -> make lint
+#   - Spectral        (npm i -g @stoplight/spectral-cli) -> make lint
 #   - @apidevtools/swagger-parser (npm)                -> make bundle
 #   - oasdiff         (go install github.com/oasdiff/oasdiff/...) -> make breaking-check
 #   - Prism           (npm i -g @stoplight/prism-cli)  -> make mock
