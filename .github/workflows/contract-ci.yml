@@ -42,7 +42,8 @@ jobs:
 
       - name: Breaking-change check
         run: |
-          go install github.com/oasdiff/oasdiff/cmd/oasdiff@latest
+          # oasdiff v1.39+ no longer ships cmd/oasdiff; the module root is the binary.
+          go install github.com/oasdiff/oasdiff@latest
           make breaking-check
 
       - name: Generate code (Go/TS/Python)
