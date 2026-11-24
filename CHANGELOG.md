@@ -11,6 +11,18 @@ This file follows the conventions of [Semantic Versioning](https://semver.org/sp
   new examples).
 - **PATCH** — corrections (typos, example fixes, description updates).
 
+## [1.1.0]
+
+### Added
+
+- Optional `X-Cap-Token` header parameter on `POST /auth/login` (`login`) and
+  `POST /media/scan` (`scanMedia`), declared via the shared
+  `#/components/parameters/CapToken` component. The header carries the CAP
+  proof-of-work token and is REQUIRED at runtime only when the backend runs with
+  `CAPTCHA_MODE=on`; a missing/invalid/unavailable token then yields the existing
+  `400` `ErrorResponse`. The change is backwards compatible (additive, optional),
+  so it is a MINOR bump: `CONTRACT_VERSION` 1.0.0 → 1.1.0.
+
 ## [1.0.0]
 
 ### Added
@@ -30,4 +42,5 @@ This file follows the conventions of [Semantic Versioning](https://semver.org/sp
 - `scripts/check-orphan-calls.mjs` guardrail ensuring no orphan frontend→backend
   or backend→scanner calls.
 
+[1.1.0]: https://github.com/lstama/cardtalogue-api-contract/releases/tag/v1.1.0
 [1.0.0]: https://github.com/lstama/cardtalogue-api-contract/releases/tag/v1.0.0
