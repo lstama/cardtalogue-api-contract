@@ -21,8 +21,10 @@ Use the mocks to prototype and test consumers before the real services exist.
 ## How to contribute
 
 Changing the shared contract is a coordinated change — see [CONTRIBUTING.md](CONTRIBUTING.md).
-In short: edit both specs, run `make verify-contract` (validate + lint + orphan-call guardrail +
-breaking-change check), and only merge when `make generate` produces no downstream diff.
+In short: edit both specs, run `make verify-contract` (validate + lint + breaking-change check +
+legacy manual orphan check), and only merge when `make generate` produces no downstream diff.
+"No orphan calls" is enforced by the **consumers** against the pinned version — see
+[No orphan calls: enforced by the consumers](#no-orphan-calls-enforced-by-the-consumers).
 
 ## Layout
 
@@ -38,7 +40,7 @@ cardtalogue-api-contract/
 ├── scripts/
 │   ├── validate.mjs      # validate both specs (swagger-parser)
 │   ├── bundle.mjs        # bundle specs into dist/ (inlines $refs)
-│   └── check-orphan-calls.mjs   # guardrail: no orphan frontend/backend calls
+│   └── check-orphan-calls.mjs   # legacy manual check (NOT CI-enforced; see below)
 ├── .spectral.yaml        # lint ruleset (operationId/summary/description/examples/tags)
 ├── Makefile              # lint / bundle / breaking-check / mock / docs / generate
 ├── CONTRACT_VERSION      # pinned version; consumers vendor this tag
@@ -64,8 +66,8 @@ npm install          # dev deps that run in this repo (swagger-parser, js-yaml)
 
 npm run validate     # validate both specs
 npm run bundle       # bundle specs into dist/
-npm run check        # orphan-call guardrail (frontend + backend->scanner)
-make verify-contract # validate + lint + check-orphan-calls + breaking-check
+npm run check        # legacy manual orphan check (blind to openapi-fetch client.*)
+make verify-contract # validate + lint + legacy check + breaking-check (manual use)
 make lint            # Spectral
 make bundle          # single-file dist/
 make breaking-check  # oasdiff vs last git tag
@@ -88,28 +90,34 @@ tag into a vendored copy inside each consumer repo. Local override:
 CONTRACT_PATH=../cardtalogue-api-contract make generate
 ```
 
-## Guardrail: orphan calls
+## No orphan calls: enforced by the consumers
 
-`scripts/check-orphan-calls.mjs` is the core enforcement. It discovers:
+The hard rule is unchanged — **every call that actually happens must be covered
+by a contract**; extra endpoints in a contract are fine. What changed is *where*
+it is enforced.
 
-1. **Frontend → backend** calls (from `cardtalogue-frontend/src/services/api.ts`)
-   and asserts each is defined in `contracts/backend.yaml`.
-2. **Backend → scanner** calls (from `cardtalogue-backend/internal/service/*.go`,
-   tracing `http.NewRequest` vars through the constructor to config) and asserts
-   each is defined in `contracts/scanner.yaml`.
+**Why not here:** the contract repo cannot see the consumer code. This repo's CI
+has no `cardtalogue-frontend` / `cardtalogue-backend` checkouts, so any check
+that reads consumer sources can only fail with `ENOENT` (or pass vacuously).
+Ownership therefore sits with the repos that own the calls, each checking against
+the contract version it pins (`CONTRACT_VERSION` → git tag):
 
-Extra endpoints in a contract are fine (a contract may document more than a
-consumer adopts). The hard requirement is **no orphan calls**: every call that
-happens must be covered by a contract.
+| Owner | Workflow | Check |
+| --- | --- | --- |
+| `cardtalogue-frontend` | `.github/workflows/contract-check.yml` | `scripts/check-contract-calls.mjs` — every openapi-fetch `client.GET/POST/PUT/DELETE/PATCH` and raw `fetch` path in `src/` exists (path **and** method) in the generated `gen/ts/backend.ts` of the pinned contract. Fails if zero calls are discovered. |
+| `cardtalogue-backend` | `.github/workflows/contract-check.yml` | `scripts/check-scanner-calls.mjs` — every backend → scanner call (traced from `http.NewRequest*` through the constructor to `CARD_SCAN_API_URL`) exists in the pinned `contracts/scanner.yaml`. Also runs `make sync-contract` + `make verify-contract` and `go test ./...`. |
 
-```
-$ npm run check
-[1] Orphan frontend calls (frontend -> backend):
-  ✓ GET /api/v1/auth/login
-  ...
-  ✓ all frontend calls are covered by the backend contract
-[2] Orphan backend -> scanner calls:
-  ✓ POST /api/recognize
-  ✓ all backend -> scanner calls are covered by the scanner contract
-✓ No orphan API calls. Contract covers every call.
-```
+Both consumers check out this repo at `CONTRACT_REF` (default `v1.1.0`), so a
+consumer PR is red until that tag exists — that is the release gate, not a bug.
+
+### Legacy local script
+
+`scripts/check-orphan-calls.mjs` (`npm run check`, and part of the local
+`make verify-contract`) is kept for manual use only. It **is not CI-enforced**
+and it is **known to under-detect**: it only recognises the old
+`getList/getOne/create/update/...` axios-era helpers and
+`authApiClient.get(...)`-style calls, so on today's `openapi-fetch` client it
+reports **0 frontend calls** and passes vacuously. Its backend → scanner side
+still works and is useful as a quick local sanity check. Do not treat a green
+`npm run check` as proof that the consumers are covered — run the consumer
+workflows.

@@ -32,10 +32,13 @@ jobs:
       - name: Bundle contracts
         run: npm run bundle
 
-      - name: Orphan-call guardrail
-        run: npm run check
-        env:
-          REPOS: ../cardtalogue-frontend:../cardtalogue-backend
+      # NOTE: "no orphan calls" is NOT enforced here. The contract repo cannot
+      # see the consumers, so each consumer checks its own calls against the
+      # pinned contract version in its own CI:
+      #   cardtalogue-frontend -> scripts/check-contract-calls.mjs
+      #   cardtalogue-backend  -> scripts/check-scanner-calls.mjs
+      # scripts/check-orphan-calls.mjs is kept for manual local use only (it
+      # does not understand openapi-fetch `client.METHOD` calls).
 
       - name: Breaking-change check
         run: |

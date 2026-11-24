@@ -4,9 +4,23 @@
 //
 // Usage: node scripts/check-orphan-calls.mjs
 //
-// This is the guardrail the contract-first workflow exists to enforce: the
-// contract must cover every call that actually happens. Extra endpoints in the
-// contract (backend routes the frontend never calls, scanner endpoints the
+// LEGACY / MANUAL ONLY. "No orphan calls" is now enforced by the consumers, each
+// against the contract version it pins:
+//   cardtalogue-frontend -> scripts/check-contract-calls.mjs (CI)
+//   cardtalogue-backend  -> scripts/check-scanner-calls.mjs  (CI)
+//
+// Known limitations (why it is no longer CI-enforced):
+//   - The frontend half only recognises the old axios-era helpers
+//     (getList/getOne/searchList/create/update/uploadMedia) and
+//     `<client>.get|post|put|delete(...)`. The current openapi-fetch client uses
+//     `client.GET|POST|PUT|DELETE|PATCH('/path')`, which this script does not
+//     match, so it reports 0 frontend calls and passes vacuously.
+//   - It needs the consumer repos next to this one (REPOS=...), which this
+//     repo's CI does not check out.
+// The backend -> scanner half still works and is useful locally.
+//
+// The contract must cover every call that actually happens. Extra endpoints in
+// the contract (backend routes the frontend never calls, scanner endpoints the
 // backend never calls) are fine.
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
