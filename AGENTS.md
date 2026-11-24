@@ -12,37 +12,55 @@ runtime code. Consumers generate from it:
   calls to the scanner are covered by `scanner.yaml`.
 - `cardtalogue-yugioh-scanner` (Python) — its HTTP surface is `scanner.yaml`.
 
+This repo is responsible for the contract's own health only:
+
+- spec validity (`npm run validate`)
+- lint (Spectral, `make lint`)
+- bundle (`npm run bundle`)
+- breaking-change detection vs the last tag (`make breaking-check`)
+- generation determinism (`make generate` builds Go/TS/Python cleanly)
+
+CI (`.github/workflows/contract-ci.yml`) runs exactly those steps with pinned
+generators. It does **not** enforce "no orphan calls" — see below.
+
 ## Golden rules
 
 1. **The contract describes behavior; it does not change it.** Never edit a
    contract to make broken code "pass". Fix the code, or genuinely change the
    behavior, then update the contract.
-2. **No orphan calls.** Every frontend→backend call and every backend→scanner
-   call must be covered by a contract. Run `npm run check` (or
-   `make check-orphan-calls`) after any change.
+2. **No orphan calls — enforced by the consumers.** Every frontend→backend and
+   backend→scanner call must be covered by a contract, but each consumer checks
+   its own calls against the pinned contract in its own CI:
+   - `cardtalogue-frontend` → `scripts/check-contract-calls.mjs`
+   - `cardtalogue-backend`  → `scripts/check-scanner-calls.mjs`
+
+   Both check out this repo at `CONTRACT_REF` (currently `v1.1.0`, matching
+   `CONTRACT_VERSION`), so a consumer PR stays red until that tag exists — that
+   is the release gate, not a bug here.
 3. **Contract-first.** When adding or changing an endpoint, edit the `.yaml`
    first (operationId, summary, description, request/response schemas, examples,
    tags), validate, then generate.
 4. **Backwards compatible.** Breaking changes require a `CONTRACT_VERSION` bump
-   and a `CHANGELOG.md` entry. `make breaking-check` enforces this in CI.
-5. **Keep it valid.** `npm run validate` must pass. `make lint` (Spectral) must
-   pass.
+   and a `CHANGELOG.md` entry. `make breaking-check` enforces this in CI against
+   tag `v$(CONTRACT_VERSION)` (it skips cleanly when that tag is absent).
+5. **Keep it valid.** `npm run validate` and `make lint` (Spectral) must pass.
 
 ## Editing a contract
 
 ```bash
 # 1. edit contracts/backend.yaml or contracts/scanner.yaml
-# 2. validate
+# 2. validate + lint
 npm run validate
-# 3. lint
 make lint
-# 4. bundle + orphan check
+# 3. bundle
 npm run bundle
-npm run check
-# 5. generate (normal environment)
+# 4. generate (normal environment); output must match what consumers build
 make generate
-# 6. bump CONTRACT_VERSION + CHANGELOG.md if breaking
+# 5. bump CONTRACT_VERSION + CHANGELOG.md if breaking
 ```
+
+Local pre-PR gate: `make verify-contract` (= `validate lint breaking-check`;
+deliberately excludes the orphan-call check).
 
 ## Adding an endpoint
 
@@ -57,17 +75,31 @@ make generate
 
 ## Tooling notes
 
-- Only npm-based scripts run in this sandbox: `validate`, `bundle`, `check`.
+- npm-based scripts run in the sandbox: `validate`, `bundle`, `check`.
 - `lint`, `breaking-check`, `mock`, `docs`, `generate`, `sync-contract` require
   external tools — see the Makefile header.
-- Code generation commands (verified working):
+- Code generation (versions pinned in CI):
   - Go:  `oapi-codegen -package tcgcontract -generate types,gin -o gen/go/backend.gen.go contracts/backend.yaml`
-         (v2 module path `github.com/oapi-codegen/oapi-codegen/v2`; install via
-         `go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest`).
-  - TS:  `npx openapi-typescript contracts/backend.yaml -o gen/ts/backend.ts`.
-  - Py:  `make install-py-gen` creates `.venv-gen`; then
+         using `github.com/oapi-codegen/oapi-codegen/v2`, **pinned to `v2.8.2`**
+         (`go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.8.2`).
+         This is the version that produced the committed backend generated code;
+         `cardtalogue-backend` pins the same version.
+  - TS:  `npx openapi-typescript contracts/backend.yaml -o gen/ts/backend.ts`
+         (resolved from `devDependencies`).
+  - Py:  `make install-py-gen` creates a uv venv; then
          `.venv-gen/bin/openapi-python-client generate --path contracts/scanner.yaml --meta uv --output-path gen/py/scanner --overwrite`.
          Arch Linux blocks system pip (PEP 668), so Python gen uses a uv venv.
-- `check-orphan-calls.mjs` resolves backend→scanner URLs by tracing
-  `http.NewRequest` vars through the constructor to the config default / `.env`.
-  It compares **paths** (identical across environments).
+
+## Orphan-call script (manual/local only)
+
+- `scripts/check-orphan-calls.mjs` (`npm run check` or `make check-orphan-calls`)
+  is **not** run in CI and **not** part of `make verify-contract`. It is kept
+  for manual local use only.
+- It is **known to under-detect**: it only recognises the old
+  `getList/getOne/create/update/...` axios-era helpers and
+  `authApiClient.get(...)`-style calls, so on today's openapi-fetch client it
+  reports **0 frontend calls** and passes vacuously. Its backend→scanner side
+  (tracing `http.NewRequest` vars through the constructor to the config default
+  / `.env`, comparing **paths**) still works as a quick sanity check.
+- A green `npm run check` is **not** proof that consumers are covered — rely on
+  the consumer workflows.
