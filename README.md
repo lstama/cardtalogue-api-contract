@@ -21,8 +21,8 @@ Use the mocks to prototype and test consumers before the real services exist.
 ## How to contribute
 
 Changing the shared contract is a coordinated change — see [CONTRIBUTING.md](CONTRIBUTING.md).
-In short: edit both specs, run `make verify-contract` (validate + lint + breaking-change check +
-legacy manual orphan check), and only merge when `make generate` produces no downstream diff.
+In short: edit both specs, run `make verify-contract` (validate + lint + breaking-change check),
+and only merge when `make generate` produces no downstream diff.
 "No orphan calls" is enforced by the **consumers** against the pinned version — see
 [No orphan calls: enforced by the consumers](#no-orphan-calls-enforced-by-the-consumers).
 
@@ -67,7 +67,7 @@ npm install          # dev deps that run in this repo (swagger-parser, js-yaml)
 npm run validate     # validate both specs
 npm run bundle       # bundle specs into dist/
 npm run check        # legacy manual orphan check (blind to openapi-fetch client.*)
-make verify-contract # validate + lint + legacy check + breaking-check (manual use)
+make verify-contract # validate + lint + breaking-check (manual local gate)
 make lint            # Spectral
 make bundle          # single-file dist/
 make breaking-check  # oasdiff vs last git tag
@@ -112,10 +112,10 @@ consumer PR is red until that tag exists — that is the release gate, not a bug
 
 ### Legacy local script
 
-`scripts/check-orphan-calls.mjs` (`npm run check`, and part of the local
-`make verify-contract`) is kept for manual use only. It **is not CI-enforced**
-and it is **known to under-detect**: it only recognises the old
-`getList/getOne/create/update/...` axios-era helpers and
+`scripts/check-orphan-calls.mjs` (`npm run check`, or `make check-orphan-calls`)
+is kept for manual use only — it is **not** part of `make verify-contract` and
+it **is not CI-enforced**. It is also **known to under-detect**: it only
+recognises the old `getList/getOne/create/update/...` axios-era helpers and
 `authApiClient.get(...)`-style calls, so on today's `openapi-fetch` client it
 reports **0 frontend calls** and passes vacuously. Its backend → scanner side
 still works and is useful as a quick local sanity check. Do not treat a green

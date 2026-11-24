@@ -2,7 +2,7 @@ name: contract
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
 
 permissions:
@@ -17,6 +17,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      # Go toolchain for the generator (oapi-codegen) and for oasdiff.
+      # 1.26 matches cardtalogue-backend/go.mod, which is what produced the
+      # committed backend generated code.
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      # Provides `uv`, used by `make install-py-gen` (PEP 668: no system pip).
+      - uses: astral-sh/setup-uv@v5
 
       - name: Install npm deps
         run: npm install
@@ -40,13 +50,26 @@ jobs:
       # scripts/check-orphan-calls.mjs is kept for manual local use only (it
       # does not understand openapi-fetch `client.METHOD` calls).
 
+      - name: Install code generators
+        run: |
+          # Pin the Go generator to the version that produced the committed
+          # backend generated code (cardtalogue-backend pins the same version).
+          go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.8.2
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+          "$(go env GOPATH)/bin/oapi-codegen" --version
+          # openapi-typescript comes from devDependencies (already installed
+          # above), so `npx openapi-typescript` resolves the local binary.
+          npx --no-install openapi-typescript --version
+          make install-py-gen
+          .venv-gen/bin/openapi-python-client --version
+
       - name: Breaking-change check
         run: |
           # oasdiff v1.39+ no longer ships cmd/oasdiff; the module root is the binary.
           go install github.com/oasdiff/oasdiff@latest
           make breaking-check
 
+      # Smoke test: every generator must run cleanly against the contracts.
+      # gen/ is git-ignored, so there is no committed output to diff here.
       - name: Generate code (Go/TS/Python)
         run: make generate
-        # Fails CI if generated code produces a diff against committed gen/
-        # (once consumers commit generated code).

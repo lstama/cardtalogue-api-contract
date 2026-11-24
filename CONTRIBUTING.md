@@ -20,13 +20,12 @@ specs:
 3. **Validate locally** before opening a PR:
 
    ```bash
-   make verify-contract   # validate + lint + legacy orphan check + breaking-change check
+   make verify-contract   # validate + lint + breaking-change check
    ```
 
    This runs:
    - `make validate` — OpenAPI schema validation
-   - `make lint` — Redocly style linting
-   - `make check` — legacy manual orphan check (**local only**, see below)
+   - `make lint` — Spectral style linting
    - `make breaking-check` — detects breaking changes against the previous version
 4. **Generate** the shared types:
 
@@ -43,8 +42,10 @@ specs:
 - **No orphan calls.** Every call that happens must be covered by a contract. This is enforced by
   the **consumers** in their own CI, against the version they pin: `cardtalogue-frontend`
   (`scripts/check-contract-calls.mjs`) and `cardtalogue-backend` (`scripts/check-scanner-calls.mjs`).
-  This repo's CI no longer runs the check — it cannot see consumer sources. `make check` is kept for
-  manual local use and under-detects (it is blind to openapi-fetch `client.METHOD` calls).
+  This repo's CI no longer runs the check — it cannot see consumer sources, and
+  `make verify-contract` no longer runs it either. `make check-orphan-calls` /
+  `npm run check` are kept for manual local use and under-detect (the script is
+  blind to openapi-fetch `client.METHOD` calls).
 - **No breaking changes without a version bump.** `make breaking-check` fails the build on breaking
   changes; coordinate the rollout with consumers first.
 - **Keep both specs in sync.** A scanner change usually means a backend change too.
@@ -58,8 +59,8 @@ specs:
 | `make validate` | Validate the OpenAPI specs |
 | `make lint` | Redocly style linting |
 | `make bundle` | Bundle specs into `dist/*.html` |
-| `make check` | Legacy manual orphan check across consumers (local only; not CI-enforced) |
+| `make check-orphan-calls` | Legacy manual orphan check across consumers (`npm run check`; local only, not CI-enforced) |
 | `make breaking-check` | Detect breaking changes vs. the previous version |
 | `make generate` | Generate Go + TS + py types |
 | `make mock` | Start Prism mock servers (:8080 backend, :5000 scanner) |
-| `make verify-contract` | validate + lint + legacy check + breaking-check (manual use) |
+| `make verify-contract` | validate + lint + breaking-check (manual local gate) |
